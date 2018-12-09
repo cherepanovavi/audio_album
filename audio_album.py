@@ -1,5 +1,5 @@
 import os
-from audio_objects import Song, Album, Artist, Genre
+from audio_objects import Song, Album, Artist, Genre, Playlist
 
 
 def sort_by_title(objects):
@@ -14,16 +14,19 @@ class AudioAlbum:
     def __init__(self, dir_selector):
         if dir_selector == "":
             raise ValueError
+        self.dir_selector = dir_selector
         self.audio_files = []
         self.songs = []
+        self.songs_titles = {}
         self.album_titles = {}
         self.artist_titles = {}
         self.albums = []
         self.artists = []
         self.playlists = []
+        self.playlists_titles = {}
         self.genres_titles = {}
         self.genres = []
-        self.get_audio_files(dir_selector)
+        self.get_audio_files()
         self.get_tags()
         self.group_by_albums_and_artists()
         self.sort_everything()
@@ -31,18 +34,30 @@ class AudioAlbum:
         self.count_songs_id()
         # self.debug()
 
+    def update(self):
+        self.get_audio_files()
+        self.get_tags()
+        self.group_by_albums_and_artists()
+        self.sort_everything()
+        self.songs_id = {}
+        self.count_songs_id()
+
     def count_songs_id(self):
         for song in self.songs:
             self.songs_id[song.id] = song
 
-    def add_playlist(self, playlist):
-        if type(playlist) == Album:
-            self.playlists.append(playlist)
+    def add_playlist(self, title, song_list=[]):
+        pl = Playlist(title, song_list)
+        self.playlists.append(pl)
+        self.playlists_titles[pl.title] = pl
+        return pl
 
     def get_tags(self):
         i = 0
         for file in self.audio_files:
-            self.songs.append(Song(file, i))
+            song = Song(self, file, i)
+            self.songs.append(song)
+            self.songs_titles[song.title] = song
             i += 1
 
     def group_by_albums_and_artists(self):
@@ -75,10 +90,10 @@ class AudioAlbum:
             sort_by_title(artist.albums)
         sort_by_title(self.songs)
 
-    def get_audio_files(self, dir_selector):
-        for file in os.listdir(dir_selector):
+    def get_audio_files(self):
+        for file in os.listdir(self.dir_selector):
             if file.endswith(".mp3"):
-                self.audio_files.append(os.path.join(dir_selector, file))
+                self.audio_files.append(os.path.join(self.dir_selector, file))
 
     def debug(self):
         for album in self.albums:

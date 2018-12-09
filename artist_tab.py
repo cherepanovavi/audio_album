@@ -1,6 +1,5 @@
 import wx
-from albums_tab import AlbumsPanel
-from song_tab import SongPanel
+from tabs_and_panels import Panel, SongPanel
 from wx.lib.splitter import MultiSplitterWindow
 
 
@@ -46,7 +45,7 @@ class ArtistTab(MultiSplitterWindow):
     def __init__(self, parent, player, artists_list):
         MultiSplitterWindow.__init__(self, parent)
         self.artist_panel = ArtistPanel(self, player, artists_list)
-        self.album_panel = AlbumsPanel(self)
+        self.album_panel = Panel(self, "Choose an album to listen")
         self.song_panel = SongPanel(self, player)
         self.AppendWindow(self.artist_panel)
         self.AppendWindow(self.album_panel)

@@ -3,8 +3,7 @@ import os
 import wx.media
 import audio_album
 from audio_player import PlayerTab
-from albums_tab import AlbumTab
-from song_tab import SongTab
+from tabs_and_panels import HalfSplittedTab, SongTab, PlaylistTab
 from artist_tab import ArtistTab
 
 my_audio_album = None
@@ -24,9 +23,9 @@ class MainFrame(wx.Frame):
         tab1 = SongTab(nb, my_audio_album.songs, player)
         tab1.SetSize(600, 600)
         tab2 = ArtistTab(nb, player, my_audio_album.artists)
-        tab3 = AlbumTab(nb, my_audio_album.albums, player)
-        tab4 = AlbumTab(nb, my_audio_album.genres, player)
-        tab5 = AlbumTab(nb, my_audio_album.playlists, player)
+        tab3 = HalfSplittedTab(nb, my_audio_album.albums, player, "Choose an album to listen")
+        tab4 = HalfSplittedTab(nb, my_audio_album.genres, player, "Choose a genre to listen")
+        tab5 = PlaylistTab(nb, my_audio_album.playlists, player, "Choose a playlist to listen", my_audio_album)
 
         nb.AddPage(tab1, "Songs")
         nb.AddPage(tab2, "Artists")

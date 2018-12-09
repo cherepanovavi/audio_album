@@ -1,24 +1,35 @@
 from eyed3 import id3
+from song_menu import SongMenu, SongSubMenu
 
 
 class Song:
-    def __init__(self, file, i):
+    def __init__(self, audio_album, file, i):
         self.id = i
         self.file = file
         tag = id3.Tag()
         tag.parse(file)
-        self.title = tag.title
-        self.album = tag.album
-        self.artist = tag.artist
-        self.genre = str(tag.genre)
+        self.title = 'untitled' if tag.title is None else tag.title
+        self.album = 'untitled' if tag.album is None else tag.album
+        self.artist = 'untitled' if tag.artist is None else tag.artist
+        self.genre = 'not stated' if tag.genre is None else str(tag.genre)
         # self.genre = tag.genre.name
-        self.number = tag.track_num[0]
+        self.number = 0 if tag.track_num is None else tag.track_num[0]
+        self.submenu = SongSubMenu(audio_album, self)
+        self.menu = SongMenu(audio_album, self)
 
     def __hash__(self):
         return self.title.__hash__() ^ self.artist.__hash__() ^ self.album.__hash__()
 
     def __eq__(self, other):
         return self.title == other.title and self.artist == other.artist and self.album == self.album
+
+    def change_id3_tags(self, dir_tags):
+        tag = id3.Tag()
+        tag.parse(self.file)
+        tag.title = dir_tags['title']
+        tag.album = dir_tags['album']
+        tag.artist = dir_tags['artist']
+        tag.save(self.file)
 
 
 class Artist:
@@ -54,6 +65,7 @@ class Genre:
             return False
         raise ValueError
 
+
 class Album:
     def __init__(self, title, artist_name):
         self.title = title
@@ -73,3 +85,19 @@ class Album:
 
     def __eq__(self, other):
         return self.title == other.title and self.artist_name == other.artist_name
+
+
+class Playlist:
+    def __init__(self, title, song_list=[]):
+        self.title = title
+        self.songs = song_list
+
+    def add_song(self, song):
+        if type(song) == Song:
+            self.songs.append(song)
+        else:
+            raise ValueError()
+
+    def add_songs(self, song_list):
+        for song in song_list:
+            self.add_song(song)
