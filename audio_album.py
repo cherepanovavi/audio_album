@@ -10,13 +10,33 @@ def sort_by_track_num(songs):
     songs.sort(key=lambda s: s.number)
 
 
+def add_song_to_group(song, song_tag, tag_dict, tag_list, create_tag, *args):
+    if song_tag not in tag_dict.keys():
+        tag = create_tag(song)
+        tag_dict[song_tag] = tag
+        tag_list.append(tag)
+    else:
+        tag = tag_dict[song_tag]
+    tag.add_song(song, *args)
+    return tag
+
+
+def delete_song_from_group(song, group_title, group_dict, group_list):
+    group = group_dict[group_title]
+    group.delete_song(song)
+    if len(group.songs) == 0 and type(group) != Playlist:
+        group_list.remove(group)
+        group_dict.pop(group_title)
+
+
 class AudioAlbum:
-    def __init__(self, dir_selector):
-        if dir_selector == "":
+    def __init__(self, dir_path):
+        if dir_path == "":
             raise ValueError
-        self.dir_selector = dir_selector
+        self.dir_path = dir_path
         self.audio_files = []
         self.songs = []
+        self.next_id = len(self.songs)
         self.songs_titles = {}
         self.album_titles = {}
         self.artist_titles = {}
@@ -24,10 +44,10 @@ class AudioAlbum:
         self.artists = []
         self.playlists = []
         self.playlists_titles = {}
+        self.song_playlists = {}
         self.genres_titles = {}
         self.genres = []
-        self.get_audio_files()
-        self.get_tags()
+        self.get_songs()
         self.group_by_albums_and_artists()
         self.sort_everything()
         self.songs_id = {}
@@ -35,12 +55,25 @@ class AudioAlbum:
         # self.debug()
 
     def update(self):
-        self.get_audio_files()
+        self.get_songs()
         self.get_tags()
         self.group_by_albums_and_artists()
         self.sort_everything()
         self.songs_id = {}
         self.count_songs_id()
+
+    def add_songs_to_playlist(self, songs, playlist):
+        for song in songs:
+            self.add_song_to_playlist(song, playlist)
+
+    def add_song_to_playlist(self, song, playlist):
+        if song in self.songs and playlist in self.playlists:
+            self.song_playlists[song.title].append(playlist)
+            playlist.add_song(song)
+        elif playlist not in self.playlists:
+            self.add_playlist(playlist.title, playlist.songs)
+        else:
+            raise ValueError
 
     def count_songs_id(self):
         for song in self.songs:
@@ -52,33 +85,14 @@ class AudioAlbum:
         self.playlists_titles[pl.title] = pl
         return pl
 
-    def get_tags(self):
-        i = 0
-        for file in self.audio_files:
-            song = Song(self, file, i)
-            self.songs.append(song)
-            self.songs_titles[song.title] = song
-            i += 1
-
     def group_by_albums_and_artists(self):
         for song in self.songs:
-            if song.album not in self.album_titles.keys():
-                album = Album(song.album, song.artist)
-                self.album_titles[song.album] = album
-                self.albums.append(album)
-            if song.artist not in self.artist_titles.keys():
-                artist = Artist(song.artist)
-                self.artist_titles[song.artist] = artist
-                self.artists.append(artist)
-            if song.genre not in self.genres_titles.keys():
-                genre = Genre(song.genre)
-                self.genres_titles[song.genre] = genre
-                self.genres.append(genre)
-            genre = self.genres_titles[song.genre]
-            genre.add_song(song)
-            album = self.album_titles[song.album]
-            album.add_song(song)
-            self.artist_titles[song.artist].add_song(song, album)
+           self.add_song_to_groups(song)
+
+    def add_song_to_groups(self, song):
+        alb = add_song_to_group(song, song.album, self.album_titles, self.albums, lambda s: Album(s.album, s.artist))
+        add_song_to_group(song, song.artist, self.artist_titles, self.artists, lambda s: Artist(s.artist), alb)
+        add_song_to_group(song, song.genre, self.genres_titles, self.genres, lambda s: Genre(s.genre))
 
     def sort_everything(self):
         sort_by_title(self.artists)
@@ -90,20 +104,33 @@ class AudioAlbum:
             sort_by_title(artist.albums)
         sort_by_title(self.songs)
 
-    def get_audio_files(self):
-        for file in os.listdir(self.dir_selector):
+    def get_songs(self):
+        i = 0
+        for file in os.listdir(self.dir_path):
             if file.endswith(".mp3"):
-                self.audio_files.append(os.path.join(self.dir_selector, file))
+                song = Song(self, os.path.join(self.dir_path, file), file, i)
+                self.songs.append(song)
+                self.songs_titles[song.title] = song
+                self.song_playlists[song.title] = []
+                i += 1
 
-    def debug(self):
-        for album in self.albums:
-            print(album.title)
-            for song in album.songs:
-                print('     ' + song.title)
-        for artist in self.artists:
-            print(artist.title)
-            for song in artist.songs:
-                print('     ' + song.title)
-            print("ALBUMS")
-            for album in artist.albums:
-                print('   ' + album.title)
+    def add_song(self, song_file, file_name):
+        song = Song(self, song_file, file_name, self.next_id)
+        self.songs.append(song)
+        self.songs_titles[song.title] = song
+        self.song_playlists[song.title] = []
+        self.add_song_to_groups(song)
+        self.sort_everything()
+        self.songs_id[song.id] = song
+        return song
+
+    def delete_song(self, song):
+        self.songs.remove(song)
+        self.songs_titles.pop(song.title)
+        self.songs_id.pop(song.id)
+        delete_song_from_group(song, song.album, self.album_titles, self.albums)
+        delete_song_from_group(song, song.artist, self.artist_titles, self.artists)
+        delete_song_from_group(song, song.genre, self.genres_titles, self.genres)
+        for playlist in self.song_playlists[song.title]:
+            delete_song_from_group(song, playlist.title, self.playlists_titles, self.playlists)
+        self.song_playlists.pop(song.title)

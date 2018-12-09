@@ -78,11 +78,9 @@ class PlayerTab(wx.Panel):
         self.sizer.Add(btn, 0, wx.LEFT, 3)
 
     def on_add(self, event):
-        self.PopupMenu(self.now_playing[self.idx].submenu, pos=(320, 10))
+        self.PopupMenu(self.now_playing[self.idx].submenu(), pos=(320, 10))
 
     def on_play(self, event=None):
-        print("!")
-        print(self.media_player.GetState())
         if event is None:
             self.media_player.Play()
         elif event is not None and event.GetIsDown():

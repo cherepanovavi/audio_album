@@ -55,15 +55,15 @@ class SongPanel(Panel):
             btn.Bind(wx.EVT_RIGHT_DOWN, self.show_menu)
 
     def show_menu(self, event):
-        menu = self.player.audio_album.songs_id[event.Id].menu
+        menu = self.player.audio_album.songs_id[event.Id].menu()
         self.PopupMenu(menu, self.ScreenToClient(wx.GetMousePosition()))
 
 
 class SongTab(wx.SplitterWindow):
     def __init__(self, parent, song_list, player):
         wx.SplitterWindow.__init__(self, parent)
-        panel = SongPanel(self, player)
-        panel.add_buttons(song_list)
+        self.panel = SongPanel(self, player)
+        self.panel.add_buttons(song_list)
 
 
 class HalfSplittedTab(wx.SplitterWindow):
