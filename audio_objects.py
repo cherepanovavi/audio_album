@@ -1,5 +1,6 @@
+from mp3_tagger import MP3File, VERSION_1, VERSION_2, VERSION_BOTH
 from eyed3 import id3
-from song_menu import SongMenu, SongSubMenu
+from menus import SongMenu, SongPlaylistMenu, PlaylistMenu
 
 
 def delete_song(group, song):
@@ -13,15 +14,16 @@ class Song:
         self.id = i
         self.file = file
         self.file_name = file_name
+        self.tags = MP3File(file).get_tags()
         tag = id3.Tag()
         tag.parse(file)
         self.title = 'untitled' if tag.title is None else tag.title
         self.album = 'untitled' if tag.album is None else tag.album
         self.artist = 'untitled' if tag.artist is None else tag.artist
         self.genre = 'not stated' if tag.genre is None else tag.genre.name
-        # self.genre = tag.genre.name
+        self.image_data = None if tag.images.get('') is None else tag.images.get('').image_data
         self.number = 0 if tag.track_num is None else tag.track_num[0]
-        self.submenu = lambda: SongSubMenu(audio_album, self)
+        self.submenu = lambda: SongPlaylistMenu(audio_album, self)
         self.menu = lambda: SongMenu(audio_album, self)
 
     def __hash__(self):
@@ -37,6 +39,26 @@ class Song:
         tag.album = dir_tags['album']
         tag.artist = dir_tags['artist']
         tag.save(self.file)
+
+    def change_id3_tags(self, dir_tags, version):
+        tag = MP3File(self.file)
+        if version == 2:
+            tag.set_version(VERSION_2)
+        else:
+            tag.set_version(VERSION_1)
+        tag.artist = dir_tags['Artist']
+        tag.album = dir_tags['Album']
+        tag.song = dir_tags['Title']
+        tag.track = dir_tags['Track number']
+        # tag.comment = dir_tags['Comments']
+        tag.year = dir_tags['Date']
+        tag.genre = dir_tags['Genre']
+        if version == 2:
+            tag.composer = dir_tags['Composer']
+            tag.copyright = dir_tags['Copyright']
+            tag.url = dir_tags['URL']
+            tag.publisher = dir_tags['Publisher']
+        tag.save()
 
 
 class Artist:
@@ -109,9 +131,12 @@ class Album:
 
 
 class Playlist:
-    def __init__(self, title, song_list=[]):
+    def __init__(self, title, song_list=None):
+        if song_list is None:
+            song_list = []
         self.title = title
         self.songs = song_list
+        self.menu = lambda au: PlaylistMenu(self, au)
 
     def add_song(self, song):
         if type(song) == Song:

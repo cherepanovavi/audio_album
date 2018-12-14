@@ -48,12 +48,12 @@ class ArtistTab(MultiSplitterWindow):
 class ArtistMessage(wx.Frame):
     def __init__(self, parent):
         wx.Frame.__init__(self, None)
-        p = wx.Panel(self, size=(400, 80), pos=(0, 0))
+        p = wx.Panel(self)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        button1 = wx.Button(p, 1, size=(150, 80), pos=(0, 0), label="Show all artist's songs")
-        button2 = wx.Button(p, 2, size=(250, 80), pos=(200, 0), label="Show artist's song grouped by albums")
+        button1 = wx.Button(p, 1, label="Show all artist's songs")
+        button2 = wx.Button(p, 2, label="Show artist's song grouped by albums")
         button1.Bind(wx.EVT_BUTTON, parent.on_msg_button)
         button2.Bind(wx.EVT_BUTTON, parent.on_msg_button)
-        sizer.Add(button1)
-        sizer.Add(button2)
+        sizer.Add(button1, 1, 0, 0)
+        sizer.Add(button2, 1, 0, 0)
         p.SetSizer(sizer)

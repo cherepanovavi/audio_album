@@ -10,13 +10,13 @@ def sort_by_track_num(songs):
     songs.sort(key=lambda s: s.number)
 
 
-def add_song_to_group(song, song_tag, tag_dict, tag_list, create_tag, *args):
-    if song_tag not in tag_dict.keys():
-        tag = create_tag(song)
-        tag_dict[song_tag] = tag
-        tag_list.append(tag)
+def add_song_to_group(song, song_group, group_dict, group_list, create_group, *args):
+    if song_group not in group_dict.keys():
+        tag = create_group(song)
+        group_dict[song_group] = tag
+        group_list.append(tag)
     else:
-        tag = tag_dict[song_tag]
+        tag = group_dict[song_group]
     tag.add_song(song, *args)
     return tag
 
@@ -56,7 +56,6 @@ class AudioAlbum:
 
     def update(self):
         self.get_songs()
-        self.get_tags()
         self.group_by_albums_and_artists()
         self.sort_everything()
         self.songs_id = {}
@@ -64,14 +63,20 @@ class AudioAlbum:
 
     def add_songs_to_playlist(self, songs, playlist):
         for song in songs:
-            self.add_song_to_playlist(song, playlist)
+            if not self.add_song_to_playlist(song, playlist):
+                return False
+        return True
 
     def add_song_to_playlist(self, song, playlist):
-        if song in self.songs and playlist in self.playlists:
-            self.song_playlists[song.title].append(playlist)
+        if song in self.songs:
+            if playlist in self.song_playlists[song]:
+                return False
+            if playlist in self.playlists:
+                self.song_playlists[song].add(playlist)
+            else:
+                self.add_playlist(playlist.title, playlist.songs)
             playlist.add_song(song)
-        elif playlist not in self.playlists:
-            self.add_playlist(playlist.title, playlist.songs)
+            return True
         else:
             raise ValueError
 
@@ -79,8 +84,12 @@ class AudioAlbum:
         for song in self.songs:
             self.songs_id[song.id] = song
 
-    def add_playlist(self, title, song_list=[]):
+    def add_playlist(self, title, song_list=None):
+        if song_list is None:
+            song_list = []
         pl = Playlist(title, song_list)
+        for song in song_list:
+            self.song_playlists[song].add(pl)
         self.playlists.append(pl)
         self.playlists_titles[pl.title] = pl
         return pl
@@ -111,14 +120,14 @@ class AudioAlbum:
                 song = Song(self, os.path.join(self.dir_path, file), file, i)
                 self.songs.append(song)
                 self.songs_titles[song.title] = song
-                self.song_playlists[song.title] = []
+                self.song_playlists[song] = set()
                 i += 1
 
     def add_song(self, song_file, file_name):
         song = Song(self, song_file, file_name, self.next_id)
         self.songs.append(song)
         self.songs_titles[song.title] = song
-        self.song_playlists[song.title] = []
+        self.song_playlists[song] = set()
         self.add_song_to_groups(song)
         self.sort_everything()
         self.songs_id[song.id] = song
@@ -131,6 +140,15 @@ class AudioAlbum:
         delete_song_from_group(song, song.album, self.album_titles, self.albums)
         delete_song_from_group(song, song.artist, self.artist_titles, self.artists)
         delete_song_from_group(song, song.genre, self.genres_titles, self.genres)
-        for playlist in self.song_playlists[song.title]:
+        for playlist in self.song_playlists[song]:
             delete_song_from_group(song, playlist.title, self.playlists_titles, self.playlists)
-        self.song_playlists.pop(song.title)
+        self.song_playlists.pop(song)
+
+    def delete_playlist(self, playlist):
+        if playlist in self.playlists:
+            for song in playlist.songs:
+                self.song_playlists[song].remove(playlist)
+            self.playlists.remove(playlist)
+            self.playlists_titles.pop(playlist.title)
+        else:
+            raise ValueError
