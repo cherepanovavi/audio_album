@@ -8,14 +8,14 @@ from artist_tab import ArtistTab
 from searcher import Searcher
 from audio_objects import Song, Album, Artist, Playlist, Genre
 
-my_audio_album = None
 dirName = os.path.dirname(os.path.abspath(__file__))
 bitmapDir = os.path.join(dirName, 'bitmaps')
 
 
 class MainFrame(wx.Frame):
-    def __init__(self):
+    def __init__(self, my_audio_album):
         wx.Frame.__init__(self, None)
+        self.audio_album = my_audio_album
         splitter = wx.SplitterWindow(self)
         p = wx.Panel(splitter)
         self.nb = wx.Notebook(p)
@@ -53,11 +53,11 @@ class MainFrame(wx.Frame):
 
     def update(self, event):
         self.searcher.update()
-        self.update_tab(self.song_tab, my_audio_album.songs)
-        self.update_tab(self.artist_tab, my_audio_album.artists)
-        self.update_tab(self.albums_tab, my_audio_album.albums)
-        self.update_tab(self.genres_tab, my_audio_album.genres)
-        self.update_tab(self.playlist_tab, my_audio_album.playlists)
+        self.update_tab(self.song_tab, self.audio_album.songs)
+        self.update_tab(self.artist_tab, self.audio_album.artists)
+        self.update_tab(self.albums_tab, self.audio_album.albums)
+        self.update_tab(self.genres_tab, self.audio_album.genres)
+        self.update_tab(self.playlist_tab, self.audio_album.playlists)
 
     def on_search(self, event):
         i = -1
@@ -74,16 +74,20 @@ class MainFrame(wx.Frame):
         t = type(au_object)
         if t == Song:
             self.nb.SetSelection(0)
-            self.player.change_now_playing(my_audio_album.songs)
-            self.player.set_idx(my_audio_album.songs.index(au_object))
+            for button in self.song_tab.panel.buttons:
+                if au_object.id == button.Id:
+                    self.focus(0, button)
+                    break
+            self.player.change_now_playing(self.audio_album.songs)
+            self.player.set_idx(self.audio_album.songs.index(au_object))
         elif t == Album:
-            self.focus(2, self.albums_tab.panel.buttons[my_audio_album.albums.index(au_object)])
+            self.focus(2, self.albums_tab.panel.buttons[self.audio_album.albums.index(au_object)])
         elif t == Artist:
-            self.focus(1, self.artist_tab.panel.buttons[my_audio_album.artists.index(au_object)])
+            self.focus(1, self.artist_tab.panel.buttons[self.audio_album.artists.index(au_object)])
         elif t == Playlist:
-            self.focus(4, self.playlist_tab.panel.buttons[my_audio_album.playlists.index(au_object)])
+            self.focus(4, self.playlist_tab.panel.buttons[self.audio_album.playlists.index(au_object)])
         elif t == Genre:
-            self.focus(3, self.genres_tab.panel.buttons[my_audio_album.genres.index(au_object)])
+            self.focus(3, self.genres_tab.panel.buttons[self.audio_album.genres.index(au_object)])
 
     def focus(self, page, focus_button):
         self.nb.SetSelection(page)
@@ -94,7 +98,7 @@ class MainFrame(wx.Frame):
         tab.panel.add_buttons(objects_list)
 
 
-if __name__ == "__main__":
+def main():
     app = wx.App()
     dir_selector = wx.DirSelector("Choose a folder to search audio files")
     try:
@@ -103,10 +107,14 @@ if __name__ == "__main__":
         wx.MessageBox("Directory is not selected. Application would be closed.", 'Error', wx.OK | wx.ICON_ERROR)
         app.Destroy()
     else:
-        fr = MainFrame()
+        fr = MainFrame(my_audio_album)
         icon = wx.Icon()
         icon.CopyFromBitmap(wx.Bitmap(os.path.join(bitmapDir, "icon.png")))
         fr.SetIcon(icon)
         fr.SetSize(600, 600)
         fr.Show()
         app.MainLoop()
+
+
+if __name__ == "__main__":
+    main()

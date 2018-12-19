@@ -1,5 +1,5 @@
-from mp3_tagger import MP3File, VERSION_1, VERSION_2, VERSION_BOTH
 from eyed3 import id3
+from eyed3.core import Date
 from menus import SongMenu, SongPlaylistMenu, PlaylistMenu
 
 
@@ -14,7 +14,11 @@ class Song:
         self.id = i
         self.file = file
         self.file_name = file_name
-        self.tags = MP3File(file).get_tags()
+        self.tag_v1 = None
+        self.tag_v2 = None
+        self.tags_v1 = {}
+        self.tags_v2 = {}
+        self.get_id3_tags()
         tag = id3.Tag()
         tag.parse(file)
         self.title = 'untitled' if tag.title is None else tag.title
@@ -32,33 +36,61 @@ class Song:
     def __eq__(self, other):
         return self.title == other.title and self.artist == other.artist and self.album == self.album
 
-    def change_id3_tags(self, dir_tags):
-        tag = id3.Tag()
-        tag.parse(self.file)
-        tag.title = dir_tags['title']
-        tag.album = dir_tags['album']
-        tag.artist = dir_tags['artist']
-        tag.save(self.file)
+    def get_id3_tags(self):
+        self.tag_v1 = id3.Tag()
+        self.tag_v1.parse(self.file, (1, None, None))
+        self.tags_v1['Track number'] = [(self.tag_v1.track_num[0], 0, 50)]
+        self.tags_v1['Title'] = '' if self.tag_v1.title is None else self.tag_v1.title
+        self.tags_v1['Artist'] = '' if self.tag_v1.artist is None else self.tag_v1.artist
+        self.tags_v1['Album'] = '' if self.tag_v1.album is None else self.tag_v1.album
+        self.tags_v1['Genre'] = None if self.tag_v1.genre is None else self.tag_v1.genre.id
+        date = self.tag_v1.recording_date
+        self.tags_v1['Date'] = [(date.day, 1, 31), (date.month, 1, 12), (date.year, 1950, 2020)] if date is not None else [(None, 1, 31), (None, 1, 12), (None, 1950, 2020)]
+        self.tags_v1['Comments'] = self.tag_v1.comments.get('').text if self.tag_v1.comments.get('') is not None else ''
+        self.tag_v2 = id3.Tag()
+        self.tag_v2.parse(self.file, (2, None, None))
+        self.tags_v2['Track number'] = [(self.tag_v2.track_num[0], 0, 50), (self.tag_v2.track_num[1], 0, 50)]
+        self.tags_v2['Disc number'] = [(self.tag_v2.disc_num[0], 0, 100), (self.tag_v2.disc_num[1], 0, 100)]
+        self.tags_v2['Title'] = '' if self.tag_v2.title is None else self.tag_v2.title
+        self.tags_v2['Artist'] = '' if self.tag_v2.artist is None else self.tag_v2.artist
+        self.tags_v2['Album'] = '' if self.tag_v2.album is None else self.tag_v2.album
+        self.tags_v2['Album artist'] = '' if self.tag_v2.album_artist is None else self.tag_v2.album_artist
+        self.tags_v2['Genre'] = None if self.tag_v2.genre is None else self.tag_v2.genre.id
+        date = self.tag_v2.recording_date
+        self.tags_v2['Date'] = [(date.day, 1, 31), (date.month, 1, 12), (date.year, 1950, 2020)] if date is not None else [(None, 1, 31), (None, 1, 12), (None, 1950, 2020)]
+        self.tags_v2['Comments'] = self.tag_v2.comments.get('').text if self.tag_v2.comments.get('') is not None else ''
+        self.tags_v2['Publisher'] = '' if self.tag_v2.publisher is None else self.tag_v2.publisher
+        self.tags_v2['Composer'] = '' if self.tag_v2.composer is None else self.tag_v2.composer
+        self.tags_v2['BPM'] = [(self.tag_v2.bpm, 0, 10000)]
 
-    def change_id3_tags(self, dir_tags, version):
-        tag = MP3File(self.file)
-        if version == 2:
-            tag.set_version(VERSION_2)
-        else:
-            tag.set_version(VERSION_1)
-        tag.artist = dir_tags['Artist']
-        tag.album = dir_tags['Album']
-        tag.song = dir_tags['Title']
-        tag.track = dir_tags['Track number']
-        # tag.comment = dir_tags['Comments']
-        tag.year = dir_tags['Date']
-        tag.genre = dir_tags['Genre']
-        if version == 2:
-            tag.composer = dir_tags['Composer']
-            tag.copyright = dir_tags['Copyright']
-            tag.url = dir_tags['URL']
-            tag.publisher = dir_tags['Publisher']
-        tag.save()
+    def change_id3_tags(self, dir_tags_v1, dir_tags_v2):
+        self.tag_v1.track_num = (dir_tags_v1['Track number'][0], None)
+        self.tag_v1.title = dir_tags_v1['Title'] if dir_tags_v1['Title'] != '' else None
+        self.tag_v1.artist = dir_tags_v1['Artist'] if dir_tags_v1['Artist'] != '' else None
+        self.tag_v1.album = dir_tags_v1['Album'] if dir_tags_v1['Album'] != '' else None
+        if 0 < dir_tags_v1['Genre'] < 255:
+            self.tag_v1.genre = dir_tags_v1['Genre']
+        date = dir_tags_v1['Date']
+        self.tag_v1.recording_date = Date(date[2], date[1], date[0])
+        self.tag_v1.comments.set(dir_tags_v1['Comments'])
+        self.tag_v1.save()
+        tn = dir_tags_v2['Track number']
+        dn = dir_tags_v2['Disc number']
+        self.tag_v2.track_num = (tn[0], tn[1])
+        self.tag_v2.disc_num = (dn[0], dn[1])
+        self.tag_v2.title = dir_tags_v2['Title'] if dir_tags_v2['Title']!= '' else None
+        self.tag_v2.artist = dir_tags_v2['Artist'] if dir_tags_v2['Artist']!= '' else None
+        self.tag_v2.album = dir_tags_v2['Album'] if dir_tags_v2['Album']!= '' else None
+        self.tag_v2.album_artist =  dir_tags_v2['Album artist'] if dir_tags_v2['Album artist']!= '' else None
+        if 0 < dir_tags_v2['Genre'] < 255:
+            self.tag_v2.genre = dir_tags_v2['Genre']
+        date = dir_tags_v2['Date']
+        self.tag_v2.recording_date = Date(date[2], date[1], date[0])
+        self.tag_v2.comments.set(dir_tags_v1['Comments'])
+        self.tag_v2.publisher = dir_tags_v2['Publisher'] if dir_tags_v2['Publisher'] != '' else None
+        self.tag_v2.composer = dir_tags_v2['Composer'] if dir_tags_v2['Composer'] != '' else None
+        self.tag_v2.bpm = dir_tags_v2['BPM'][0]
+        self.tag_v2.save()
 
 
 class Artist:

@@ -1,22 +1,6 @@
 
-\.idea/audio_album\.iml
-
-\.idea/misc\.xml
-
-\.idea/workspace\.xml
-
-\.idea/modules\.xml
-
-\.idea/untitled\.iml
-
-*.xml
+\.idea
 
 *.pyc
-
-*.pth
-
-*.exe
-
-venv/Scripts/
 
 venv/
