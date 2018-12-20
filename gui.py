@@ -45,9 +45,9 @@ class MainFrame(wx.Frame):
         self.searcher = Searcher(my_audio_album)
         self.search = wx.SearchCtrl(tb, style=wx.TE_PROCESS_ENTER)
         tb.Bind(wx.EVT_TEXT_ENTER, self.on_search)
-        control = tb.AddControl(self.search)
+        tb.AddControl(self.search)
         img = wx.Bitmap(os.path.join(bitmapDir, "update.png"))
-        tool = tb.AddTool(23, 'update', img)
+        tb.AddTool(23, 'update', img)
         tb.Bind(wx.EVT_TOOL, self.update)
         tb.Realize()
 
@@ -61,9 +61,9 @@ class MainFrame(wx.Frame):
 
     def on_search(self, event):
         i = -1
-        input = self.search.GetValue()
-        results = self.searcher.get_search_results(input.lower())
-        ch = wx.SingleChoiceDialog(self, 'Found for request: {}'.format(input), 'Search result', [r[0] for r in results])
+        search_request = self.search.GetValue()
+        results = self.searcher.get_search_results(search_request.lower())
+        ch = wx.SingleChoiceDialog(self, 'Found for request: {}'.format(search_request), 'Search result', [r[0] for r in results])
         if ch.ShowModal() == wx.ID_OK:
             i = ch.GetSelection()
         ch.Destroy()
@@ -93,7 +93,8 @@ class MainFrame(wx.Frame):
         self.nb.SetSelection(page)
         focus_button.SetFocus()
 
-    def update_tab(self, tab, objects_list):
+    @staticmethod
+    def update_tab(tab, objects_list):
         tab.panel.delete_buttons()
         tab.panel.add_buttons(objects_list)
 

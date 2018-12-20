@@ -6,7 +6,7 @@ from audio_album import AudioAlbum
 
 class SearcherTest(unittest.TestCase):
     def setUp(self):
-        self.au_alb = AudioAlbum(os.getcwd() + '\\test_audio_files')
+        self.au_alb = AudioAlbum(os.getcwd() + os.sep + 'test_audio_files')
         self.searcher = Searcher(self.au_alb)
 
     def test_search(self):

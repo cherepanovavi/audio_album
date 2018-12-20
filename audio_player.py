@@ -4,7 +4,6 @@ import wx.media
 import wx.lib.buttons as buttons
 from album_cover import AlbumCover
 
-# unbind?
 dirName = os.path.dirname(os.path.abspath(__file__))
 bitmapDir = os.path.join(dirName, 'bitmaps')
 
@@ -25,17 +24,17 @@ class PlayerTab(wx.Panel):
         self.add_controls()
         self.now_playing = None
         self.idx = -1
-        self.media_player.Bind(wx.media.EVT_MEDIA_STATECHANGED, self.state_changed)
+        # self.media_player.Bind(wx.media.EVT_MEDIA_STATECHANGED, self.state_changed)
 
     def on_song(self, event):
         self.play_pause_btn.Enable(True)
+        self.play_pause_btn.SetValue(False)
         for btn in self.buttons:
             btn.Enable(True)
         song = self.audio_album.songs_id[event.Id]
         self.change_text(song)
         self.media_player.Load(song.file)
         self.idx = self.now_playing.index(song)
-        self.on_play()
 
     def change_text(self, song):
         label = ('{} - {} - {}'.format(song.artist.title(), song.album.title(), song.title))
@@ -81,10 +80,8 @@ class PlayerTab(wx.Panel):
     def on_add(self, event):
         self.PopupMenu(self.now_playing[self.idx].submenu(), self.ScreenToClient(wx.GetMousePosition()))
 
-    def on_play(self, event=None):
-        if event is None:
-            self.media_player.Play()
-        elif event is not None and event.GetIsDown():
+    def on_play(self, event):
+        if event.GetIsDown():
             self.media_player.Play()
         else:
             self.media_player.Pause()
@@ -94,6 +91,7 @@ class PlayerTab(wx.Panel):
         song = self.now_playing[self.idx]
         self.media_player.Load(song.file)
         self.change_text(song)
+        self.play_pause_btn.SetValue(False)
 
     def on_next(self, event):
         self.idx = (self.idx + 1) % len(self.now_playing)
@@ -101,6 +99,7 @@ class PlayerTab(wx.Panel):
         song = self.now_playing[self.idx]
         self.media_player.Load(song.file)
         self.change_text(song)
+        self.play_pause_btn.SetValue(False)
 
     def on_album_cover(self, event):
         song = self.now_playing[self.idx]

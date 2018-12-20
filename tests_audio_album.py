@@ -5,7 +5,7 @@ from audio_album import AudioAlbum
 
 class AudioAlbumsTest(unittest.TestCase):
     def setUp(self):
-        self.au_alb = AudioAlbum(os.getcwd()+'\\test_audio_files')
+        self.au_alb = AudioAlbum(os.getcwd() + os.sep + 'test_audio_files')
 
     def test_albums_init(self):
         self.assertTrue(len(self.au_alb.albums) == 3)
@@ -72,7 +72,7 @@ class AudioAlbumsTest(unittest.TestCase):
         self.assertTrue("Don't Try Suicide" not in self.au_alb.songs_titles.keys())
         self.assertTrue("Queen" not in self.au_alb.artist_titles.keys())
         self.assertTrue("The Game" not in self.au_alb.album_titles.keys())
-        self.au_alb.add_song(os.getcwd()+'\\test_audio_files\\4.mp3', '4.mp3')
+        self.au_alb.add_song(os.getcwd() + os.sep + 'test_audio_files' + os.sep + '4.mp3', '4.mp3')
         self.assertTrue("Don't Try Suicide" in self.au_alb.songs_titles.keys())
         self.assertTrue("Queen" in self.au_alb.artist_titles.keys())
         self.assertTrue("The Game" in self.au_alb.album_titles.keys())

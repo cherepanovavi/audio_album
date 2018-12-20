@@ -8,7 +8,7 @@ class AudioAlbum:
         if dir_path == "":
             raise ValueError
         self.dir_path = dir_path
-        self.audio_files = []
+        self.file_names = {}
         self.songs = []
         self.next_id = len(self.songs)
         self.songs_titles = {}
@@ -73,7 +73,7 @@ class AudioAlbum:
 
     def group_by_albums_and_artists(self):
         for song in self.songs:
-           self.add_song_to_groups(song)
+            self.add_song_to_groups(song)
 
     def add_song_to_groups(self, song):
         alb = add_song_to_group(song, song.album, self.album_titles, self.albums, lambda s: Album(s.album, s.artist))
@@ -93,8 +93,7 @@ class AudioAlbum:
     def get_songs(self):
         i = 0
         for file in self.files:
-            j = file.find(self.dir_path[len(self.dir_path) - 1])
-            file_name = file[j+2:]
+            file_name = self.file_names[file]
             song = Song(self, file, file_name, i)
             self.songs.append(song)
             self.songs_titles[song.title] = song
@@ -102,8 +101,10 @@ class AudioAlbum:
             i += 1
 
     def get_unique_files(self):
-        self.audio_files = get_files_from_dir(self.dir_path)
-        a = Analyzer(self.audio_files)
+        audio_files = get_files_from_dir(self.dir_path)
+        paths = audio_files[0]
+        self.file_names = audio_files[1]
+        a = Analyzer(paths)
         return a.get_unique()
 
     def add_song(self, song_file, file_name):
@@ -174,9 +175,14 @@ def delete_song_from_group(song, group_title, group_dict, group_list):
         group_dict.pop(group_title)
 
 
-def get_files_from_dir(dir_path):
-    res = []
-    for file in os.listdir(dir_path):
-        if file.endswith(".mp3"):
-            res.append(os.path.join(dir_path, file))
-    return res
+def get_files_from_dir(top_dir_path):
+    paths = []
+    file_names = {}
+    for directory in os.walk(top_dir_path):
+        for file in directory[2]:
+            dir_path = directory[0]
+            if file.endswith(".mp3"):
+                path = os.path.join(dir_path, file)
+                paths.append(path)
+                file_names[path] = file
+    return paths, file_names

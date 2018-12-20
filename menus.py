@@ -63,7 +63,7 @@ class SongMenu(wx.Menu):
     def change_dir(self, event):
         dir_path = wx.DirSelector('Choose a new folder for file')
         if dir_path != '':
-            file = dir_path + '\\' + self.song.file_name
+            file = dir_path + os.sep + self.song.file_name
             shutil.move(self.song.file, file)
             update_song(self.audio_album, self.song, {'file': file, 'name': self.song.file_name})
         warning()

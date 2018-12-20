@@ -1,4 +1,5 @@
 import wx
+from wx.lib.scrolledpanel import ScrolledPanel
 from audio_objects import Song
 from menus import get_playlist_songs, get_playlist_title
 
@@ -40,9 +41,17 @@ class Panel(wx.Panel):
         self.parent.song_panel.add_buttons(self.objects_list[event.Id].songs)
 
 
-class SongPanel(Panel):
+class SongPanel(ScrolledPanel):
     def __init__(self, parent, player, text="Choose a song to listen"):
-        Panel.__init__(self, parent, text)
+        ScrolledPanel.__init__(self, parent, style=wx.BORDER_SUNKEN)
+        self.parent = parent
+        self.objects_list = None
+        self.buttons = []
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        t = wx.StaticText(self, -1, text)
+        self.sizer.Add(t)
+        self.SetSizer(self.sizer)
+        self.SetupScrolling()
         self.player = player
 
     def on_button(self, event):
@@ -50,9 +59,24 @@ class SongPanel(Panel):
         self.player.on_song(event)
 
     def add_buttons(self, objects_list):
-        super().add_buttons(objects_list)
-        for btn in self.buttons:
-            btn.Bind(wx.EVT_RIGHT_DOWN, self.show_menu)
+        self.objects_list = objects_list
+        i = 0
+        for au_obj in objects_list:
+            obj_id = au_obj.id
+            button = wx.Button(self, obj_id, label=au_obj.title, size=(200, 25), style=wx.BU_LEFT)
+            self.buttons.append(button)
+            self.sizer.Add(button)
+            button.Bind(wx.EVT_BUTTON, self.on_button)
+            button.Bind(wx.EVT_RIGHT_DOWN, self.show_menu)
+            i += 1
+        self.Layout()
+
+    def delete_buttons(self):
+        button: wx.Button
+        for button in self.buttons:
+            button.Destroy()
+        self.buttons = []
+        self.objects_list = None
 
     def show_menu(self, event):
         menu = self.player.audio_album.songs_id[event.Id].menu()
