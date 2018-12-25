@@ -1,4 +1,3 @@
-import sys
 import acoustid
 
 API_KEY = 'cSpUJKpD'
@@ -52,11 +51,11 @@ def aidmatch(filename):
     try:
         results = acoustid.match(API_KEY, filename)
     except acoustid.NoBackendError:
-        print("chromaprint library/tool not found", file=sys.stderr)
+        print("chromaprint library/tool not found")
     except acoustid.FingerprintGenerationError:
-        print("fingerprint could not be calculated", file=sys.stderr)
+        print("fingerprint could not be calculated")
     except acoustid.WebServiceError as exc:
-        print("web service request failed:", exc.message, file=sys.stderr)
+        print("web service request failed:", exc.message)
     else:
         for score, rid, title, artist in results:
             return rid

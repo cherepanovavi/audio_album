@@ -31,4 +31,4 @@
 * shutil
 * unittest
 * eyed3
-* pydub (для работы этого модуля необходимо установть ffmpeg и указать к нему путь в path)
+* acoustid
