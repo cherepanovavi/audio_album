@@ -1,23 +1,21 @@
-from pydub import AudioSegment
+import sys
+import acoustid
+
+API_KEY = 'cSpUJKpD'
 
 
 class Analyzer:
     def __init__(self, files):
-        self.files = files
+        self.files = list(files)
         self.length = len(self.files)
-        self.segments = []
-        self.raw_data = []
-        self.short_parts = []
-        self.long_parts = []
+        self.ids = []
         self.copies = set()
         self.selected_copies = set()
         self.copies_numbers = {}
+
         for file in files:
-            segment = AudioSegment.from_mp3(file)
-            self.segments.append(segment)
-            self.raw_data.append(segment.raw_data)
-            self.short_parts.append(segment[:10000].raw_data)
-            self.long_parts.append(segment[10000:-10000].raw_data)
+            self.ids.append(aidmatch(file))
+        self.find_copies()
 
     def get_unique(self):
         self.find_copies()
@@ -30,26 +28,35 @@ class Analyzer:
                     res.append(self.files[r])
             else:
                 res.append(self.files[i])
-        # print(res)
         return res
 
     def find_copies(self):
         for i in range(0, self.length):
             for j in range(0, self.length):
-                if i != j:
-                    r = self.raw_data[j].find(self.short_parts[i])
-                    if r != -1:
-                        r_2 = self.raw_data[j].find(self.long_parts[i])
-                        if r_2 != -1:
-                            self.copies.add((i, j))
-                            self.copies_numbers[i] = (i, j)
-                            self.copies_numbers[j] = (i, j)
+                if i != j and self.ids[i] == self.ids[j]:
+                    print(i, j)
+                    self.copies.add((i, j))
+                    self.copies_numbers[i] = (i, j)
+                    self.copies_numbers[j] = (i, j)
 
     def choose_one_from_copy(self, i, j):
-        l_1 = len(self.raw_data[i])
-        l_2 = len(self.raw_data[j])
+        l_1 = self.ids[i][0]
+        l_2 = self.ids[j][0]
         if l_1 > l_2:
             return i
         else:
             return j
 
+
+def aidmatch(filename):
+    try:
+        results = acoustid.match(API_KEY, filename)
+    except acoustid.NoBackendError:
+        print("chromaprint library/tool not found", file=sys.stderr)
+    except acoustid.FingerprintGenerationError:
+        print("fingerprint could not be calculated", file=sys.stderr)
+    except acoustid.WebServiceError as exc:
+        print("web service request failed:", exc.message, file=sys.stderr)
+    else:
+        for score, rid, title, artist in results:
+            return rid
