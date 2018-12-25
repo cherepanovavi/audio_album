@@ -4,7 +4,6 @@ import shutil
 from album_cover import AlbumCover
 from tag_dialog import TagDialog, update_song
 
-
 class SongMenu(wx.Menu):
     def __init__(self, audio_album, song):
         wx.Menu.__init__(self)
@@ -132,9 +131,9 @@ class PlaylistMenu(wx.Menu):
         wx.Menu.__init__(self)
         self.playlist = playlist
         self.audio_album = audio_album
-        items = ['Add song to playlist', 'Delete playlist']
-        handlers = [self.add_song, self.delete_playlist]
-        for i in range(0, 2):
+        items = ['Add song to playlist', 'Delete playlist', 'Change song order']
+        handlers = [self.add_song, self.delete_playlist, self.change_order]
+        for i in range(0, 3):
             item = self.Append(-1, item=items[i], kind=wx.ITEM_NORMAL)
             self.Bind(wx.EVT_MENU, handlers[i], item)
 
@@ -150,3 +149,63 @@ class PlaylistMenu(wx.Menu):
                 self.audio_album.delete_playlist(self.playlist)
             except ValueError as e:
                 wx.MessageBox(e, 'Error', wx.ICON_ERROR)
+
+    def change_order(self, event):
+        o = SongOrderChanger(self.playlist, self.audio_album)
+        o.Show()
+
+
+class SongOrderChanger(wx.Dialog):
+    def __init__(self, playlist, audio_album):
+        wx.Dialog.__init__(self, None)
+        self.playlist = playlist
+        self.audio_album = audio_album
+        self.selection = -1
+        self.p = wx.Panel(self)
+        self.s = wx.BoxSizer(wx.VERTICAL)
+        update = wx.Button(self, label='UPDATE')
+        self.s.Add(update)
+        update.Bind(wx.EVT_BUTTON, self.update)
+        self.buttons = []
+        self.h_s = wx.BoxSizer(wx.HORIZONTAL)
+        self.up = None
+        self.down = None
+        self.add_buttons()
+        self.p.SetSizer(self.s)
+
+    def add_buttons(self):
+        for song in self.playlist.songs:
+            button = wx.Button(self.p, song.id, label=song.title, size=(200, 25), style=wx.BU_LEFT)
+            self.s.Add(button)
+            self.buttons.append(button)
+            button.Bind(wx.EVT_BUTTON, self.change_selection)
+        self.up = wx.Button(self.p, -1, label='UP')
+        self.down = wx.Button(self.p, -1, label='DOWN')
+        self.h_s.Add(self.up)
+        self.h_s.Add(self.down)
+        self.up.Bind(wx.EVT_BUTTON, self.move_up)
+        self.down.Bind(wx.EVT_BUTTON, self.move_down)
+        self.s.Add(self.h_s)
+        self.Layout()
+
+    def delete_buttons(self):
+        for button in self.buttons:
+            button.Destroy()
+        self.up.Destroy()
+        self.down.Destroy()
+        self.buttons = []
+
+    def update(self, event):
+        self.delete_buttons()
+        self.add_buttons()
+
+    def move_up(self, event):
+        i = 0 if self.selection == -1 else self.playlist.songs.index(self.audio_album.songs_id[self.selection])
+        self.playlist.swap_songs(i, i-1)
+
+    def move_down(self, event):
+        i = 0 if self.selection == -1 else self.playlist.songs.index(self.audio_album.songs_id[self.selection])
+        self.playlist.swap_songs(i, i+1)
+
+    def change_selection(self, event):
+        self.selection = event.Id

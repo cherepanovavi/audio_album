@@ -60,7 +60,6 @@ class SongPanel(ScrolledPanel):
 
     def add_buttons(self, objects_list):
         self.objects_list = objects_list
-        i = 0
         for au_obj in objects_list:
             obj_id = au_obj.id
             button = wx.Button(self, obj_id, label=au_obj.title, size=(200, 25), style=wx.BU_LEFT)
@@ -68,7 +67,6 @@ class SongPanel(ScrolledPanel):
             self.sizer.Add(button)
             button.Bind(wx.EVT_BUTTON, self.on_button)
             button.Bind(wx.EVT_RIGHT_DOWN, self.show_menu)
-            i += 1
         self.Layout()
 
     def delete_buttons(self):

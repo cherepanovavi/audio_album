@@ -45,7 +45,9 @@ class Song:
         self.tags_v1['Album'] = '' if self.tag_v1.album is None else self.tag_v1.album
         self.tags_v1['Genre'] = None if self.tag_v1.genre is None else self.tag_v1.genre.id
         date = self.tag_v1.recording_date
-        self.tags_v1['Date'] = [(date.day, 1, 31), (date.month, 1, 12), (date.year, 1950, 2020)] if date is not None else [(None, 1, 31), (None, 1, 12), (None, 1950, 2020)]
+        self.tags_v1['Date'] = [(date.day, 1, 31), (date.month, 1, 12),
+                                (date.year, 1950, 2020)] if date is not None else [(None, 1, 31), (None, 1, 12),
+                                                                                   (None, 1950, 2020)]
         self.tags_v1['Comments'] = self.tag_v1.comments.get('').text if self.tag_v1.comments.get('') is not None else ''
         self.tag_v2 = id3.Tag()
         self.tag_v2.parse(self.file, (2, None, None))
@@ -57,7 +59,9 @@ class Song:
         self.tags_v2['Album artist'] = '' if self.tag_v2.album_artist is None else self.tag_v2.album_artist
         self.tags_v2['Genre'] = None if self.tag_v2.genre is None else self.tag_v2.genre.id
         date = self.tag_v2.recording_date
-        self.tags_v2['Date'] = [(date.day, 1, 31), (date.month, 1, 12), (date.year, 1950, 2020)] if date is not None else [(None, 1, 31), (None, 1, 12), (None, 1950, 2020)]
+        self.tags_v2['Date'] = [(date.day, 1, 31), (date.month, 1, 12),
+                                (date.year, 1950, 2020)] if date is not None else [(None, 1, 31), (None, 1, 12),
+                                                                                   (None, 1950, 2020)]
         self.tags_v2['Comments'] = self.tag_v2.comments.get('').text if self.tag_v2.comments.get('') is not None else ''
         self.tags_v2['Publisher'] = '' if self.tag_v2.publisher is None else self.tag_v2.publisher
         self.tags_v2['Composer'] = '' if self.tag_v2.composer is None else self.tag_v2.composer
@@ -78,10 +82,10 @@ class Song:
         dn = dir_tags_v2['Disc number']
         self.tag_v2.track_num = (tn[0], tn[1])
         self.tag_v2.disc_num = (dn[0], dn[1])
-        self.tag_v2.title = dir_tags_v2['Title'] if dir_tags_v2['Title']!= '' else None
-        self.tag_v2.artist = dir_tags_v2['Artist'] if dir_tags_v2['Artist']!= '' else None
-        self.tag_v2.album = dir_tags_v2['Album'] if dir_tags_v2['Album']!= '' else None
-        self.tag_v2.album_artist =  dir_tags_v2['Album artist'] if dir_tags_v2['Album artist']!= '' else None
+        self.tag_v2.title = dir_tags_v2['Title'] if dir_tags_v2['Title'] != '' else None
+        self.tag_v2.artist = dir_tags_v2['Artist'] if dir_tags_v2['Artist'] != '' else None
+        self.tag_v2.album = dir_tags_v2['Album'] if dir_tags_v2['Album'] != '' else None
+        self.tag_v2.album_artist = dir_tags_v2['Album artist'] if dir_tags_v2['Album artist'] != '' else None
         if 0 < dir_tags_v2['Genre'] < 255:
             self.tag_v2.genre = dir_tags_v2['Genre']
         date = dir_tags_v2['Date']
@@ -126,7 +130,7 @@ class Genre:
         self.title = title
         self.songs = []
 
-    def add_song(self,  song):
+    def add_song(self, song):
         if type(song) == Song:
             if song.genre == self.title:
                 self.songs.append(song)
@@ -182,3 +186,10 @@ class Playlist:
 
     def delete_song(self, song):
         delete_song(self, song)
+
+    def swap_songs(self, idx_1, idx_2):
+        idx_1 = idx_1 % len(self.songs)
+        idx_2 = idx_2 % len(self.songs)
+        song = self.songs[idx_1]
+        self.songs[idx_1] = self.songs[idx_2]
+        self.songs[idx_2] = song

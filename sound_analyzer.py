@@ -33,7 +33,6 @@ class Analyzer:
         for i in range(0, self.length):
             for j in range(0, self.length):
                 if i != j and self.ids[i] == self.ids[j]:
-                    print(i, j)
                     self.copies.add((i, j))
                     self.copies_numbers[i] = (i, j)
                     self.copies_numbers[j] = (i, j)
