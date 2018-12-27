@@ -163,22 +163,7 @@ class SongOrderChanger(wx.Dialog):
         self.selection = -1
         self.p = wx.Panel(self)
         self.s = wx.BoxSizer(wx.VERTICAL)
-        update = wx.Button(self, label='UPDATE')
-        self.s.Add(update)
-        update.Bind(wx.EVT_BUTTON, self.update)
-        self.buttons = []
         self.h_s = wx.BoxSizer(wx.HORIZONTAL)
-        self.up = None
-        self.down = None
-        self.add_buttons()
-        self.p.SetSizer(self.s)
-
-    def add_buttons(self):
-        for song in self.playlist.songs:
-            button = wx.Button(self.p, song.id, label=song.title, size=(200, 25), style=wx.BU_LEFT)
-            self.s.Add(button)
-            self.buttons.append(button)
-            button.Bind(wx.EVT_BUTTON, self.change_selection)
         self.up = wx.Button(self.p, -1, label='UP')
         self.down = wx.Button(self.p, -1, label='DOWN')
         self.h_s.Add(self.up)
@@ -186,13 +171,21 @@ class SongOrderChanger(wx.Dialog):
         self.up.Bind(wx.EVT_BUTTON, self.move_up)
         self.down.Bind(wx.EVT_BUTTON, self.move_down)
         self.s.Add(self.h_s)
-        self.Layout()
+        self.buttons = []
+        self.add_buttons()
+        self.p.SetSizer(self.s)
+
+    def add_buttons(self):
+        for song in self.playlist.songs:
+            button = wx.Button(self.p, song.id, label=song.title, size=(200, 25), style=wx.BU_LEFT)
+            self.buttons.append(button)
+            self.s.Add(button)
+            button.Bind(wx.EVT_BUTTON, self.change_selection)
+        self.p.Layout()
 
     def delete_buttons(self):
         for button in self.buttons:
             button.Destroy()
-        self.up.Destroy()
-        self.down.Destroy()
         self.buttons = []
 
     def update(self, event):
@@ -202,10 +195,12 @@ class SongOrderChanger(wx.Dialog):
     def move_up(self, event):
         i = 0 if self.selection == -1 else self.playlist.songs.index(self.audio_album.songs_id[self.selection])
         self.playlist.swap_songs(i, i-1)
+        self.update(event)
 
     def move_down(self, event):
         i = 0 if self.selection == -1 else self.playlist.songs.index(self.audio_album.songs_id[self.selection])
         self.playlist.swap_songs(i, i+1)
+        self.update(event)
 
     def change_selection(self, event):
         self.selection = event.Id
