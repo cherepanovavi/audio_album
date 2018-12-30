@@ -26,7 +26,7 @@ class Song:
         self.artist = 'untitled' if tag.artist is None else tag.artist
         self.genre = 'not stated' if tag.genre is None else tag.genre.name
         self.image_data = None if tag.images.get('') is None else tag.images.get('').image_data
-        self.number = 0 if tag.track_num is None else tag.track_num[0]
+        self.number = 0 if tag.track_num is None or tag.track_num[0] is None else tag.track_num[0]
         self.submenu = lambda: SongPlaylistMenu(audio_album, self)
         self.menu = lambda: SongMenu(audio_album, self)
 
