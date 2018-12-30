@@ -31,4 +31,4 @@
 * shutil
 * unittest
 * eyed3
-* acoustid
+* pyacoustid
